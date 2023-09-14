@@ -1,31 +1,14 @@
-import os
 import threading
 import time
-from multiprocessing import Process
 
 import keyboard
 import mouse
-import pyttsx3
+
+from audio import speak, terminate_audio, init_audio
 
 stop = False
 in_progress = False
 number_buffer = [0, 0, 0, 0]
-
-
-class Audio:
-    engine = None
-    rate = None
-
-    def __init__(self, text):
-        self.text = text
-        self.process = Process(target=self._say)
-        self.process.start()
-
-    def _say(self):
-        engine = pyttsx3.init()
-        engine.say(self.text)
-        engine.runAndWait()
-        del self
 
 
 def hold_key(key, duration):
@@ -69,24 +52,22 @@ def reload_and_shoot(n):
     for ith_shell in range(n):
         if stop:
             break
-        Audio(f"Reload {ith_shell + 1} out of {n}")
+        print(f"Reload {ith_shell + 1} out of {n}")
+        speak(f"Reload {ith_shell + 1} out of {n}")
         _reload_and_shoot()
         count_shoot += 1
 
     print((time.time() - t0) / n)
-    Audio(f"Shoot {count_shoot} finished")
+    print(f"Shoot {count_shoot} finished")
+    speak(f"Shoot {count_shoot} finished")
     in_progress = False
 
 
 def stop_execution():
     global stop
     stop = True
-    Audio(f"Shooting cancelled!")
-
-
-def exit_program():
-    print("Exiting the program...")
-    os._exit(0)
+    print(f"Shooting cancelled!")
+    speak(f"Shooting cancelled!")
 
 
 def record_number(key: keyboard.KeyboardEvent):
@@ -102,20 +83,23 @@ def calculate_levitation():
         allies = round(-0.237 * distance + 1001.7)
         soviet = round(-0.213 * distance + 1141.3)
         print(f"Distance {distance}, levitation: {allies}, {soviet}")
-        Audio(f"Distance {distance}, levitation: {allies}, {soviet}")
+        speak(f"Distance {distance}, levitation: {allies}, {soviet}")
 
 
 if __name__ == '__main__':
-    # Assign hotkeys to perform actions
+    init_audio()
+
+    # Assign hotkeys to perform #actions
     for i in range(1, 10):
         keyboard.add_hotkey(f'SHIFT+{i}',
                             lambda x=i: threading.Thread(target=reload_and_shoot, args=(x,)).start())
 
     keyboard.add_hotkey('DELETE', stop_execution)
-    keyboard.add_hotkey(f'SHIFT+Q', exit_program)
-    keyboard.add_hotkey(f'CAPSLOCK', calculate_levitation)
+    # keyboard.add_hotkey('SHIFT+Q', exit_program)
+    keyboard.add_hotkey('CAPSLOCK', calculate_levitation)
     keyboard.on_press(record_number, suppress=False)
 
-    keyboard.wait()
+    keyboard.wait('SHIFT+Q')
+    terminate_audio()
 
     # pyinstaller.exe --icon=arty.ico -F arty_reload.py --noconsole
