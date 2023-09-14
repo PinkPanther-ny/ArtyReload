@@ -1,10 +1,15 @@
 import os
 import threading
 import time
+from multiprocessing import Process
 
 import keyboard
 import mouse
 import pyttsx3
+
+stop = False
+in_progress = False
+number_buffer = [0, 0, 0, 0]
 
 
 class Audio:
@@ -12,15 +17,15 @@ class Audio:
     rate = None
 
     def __init__(self, text):
-        self.engine = pyttsx3.init()
-        self.engine.say(text)
-        self.engine.runAndWait()
+        self.text = text
+        self.process = Process(target=self._say)
+        self.process.start()
+
+    def _say(self):
+        engine = pyttsx3.init()
+        engine.say(self.text)
+        engine.runAndWait()
         del self
-
-
-stop = False
-in_progress = False
-number_buffer = [0, 0, 0, 0]
 
 
 def hold_key(key, duration):
@@ -53,21 +58,23 @@ def _reload_and_shoot():
 
 def reload_and_shoot(n):
     global stop, in_progress
-
     if in_progress:
         return
     in_progress = True
+
     t0 = time.time()
     stop = False
+
+    count_shoot = 0
     for ith_shell in range(n):
         if stop:
             break
         Audio(f"Reload {ith_shell + 1} out of {n}")
-
-        print(2)
         _reload_and_shoot()
+        count_shoot += 1
+
     print((time.time() - t0) / n)
-    Audio(f"Shoot {n} finished")
+    Audio(f"Shoot {count_shoot} finished")
     in_progress = False
 
 
@@ -98,15 +105,17 @@ def calculate_levitation():
         Audio(f"Distance {distance}, levitation: {allies}, {soviet}")
 
 
-# Assign hotkeys to perform actions
-for i in range(1, 10):
-    keyboard.add_hotkey(f'SHIFT+{i}', lambda x=i: threading.Thread(target=reload_and_shoot, args=(x,)).start())
+if __name__ == '__main__':
+    # Assign hotkeys to perform actions
+    for i in range(1, 10):
+        keyboard.add_hotkey(f'SHIFT+{i}',
+                            lambda x=i: threading.Thread(target=reload_and_shoot, args=(x,)).start())
 
-keyboard.add_hotkey('DELETE', stop_execution)
-keyboard.add_hotkey(f'SHIFT+Q', exit_program)
-keyboard.add_hotkey(f'CAPSLOCK', calculate_levitation)
-keyboard.on_press(record_number, suppress=False)
+    keyboard.add_hotkey('DELETE', stop_execution)
+    keyboard.add_hotkey(f'SHIFT+Q', exit_program)
+    keyboard.add_hotkey(f'CAPSLOCK', calculate_levitation)
+    keyboard.on_press(record_number, suppress=False)
 
-keyboard.wait()
+    keyboard.wait()
 
-# pyinstaller.exe --icon=arty.ico -F arty_reload.py --noconsole
+    # pyinstaller.exe --icon=arty.ico -F arty_reload.py --noconsole
