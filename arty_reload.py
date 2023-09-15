@@ -4,7 +4,7 @@ import time
 import keyboard
 import mouse
 
-from audio import speak, terminate_audio, init_audio
+from audio import speak, terminate_audio
 
 stop = False
 in_progress = False
@@ -91,10 +91,12 @@ def calculate_levitation():
 def switch_arty_type():
     global arty_type_is_allies
     arty_type_is_allies = not arty_type_is_allies
+    print(f"Artillery type switched, currently {'allies' if arty_type_is_allies else 'soviet'}")
     speak(f"Artillery type switched, currently {'allies' if arty_type_is_allies else 'soviet'}")
 
 
 if __name__ == '__main__':
+
     print("""
     Instruction:
     The program simulates artillery shooting and calculates levitation based on distance.
@@ -104,7 +106,7 @@ if __name__ == '__main__':
 
     2. Press 'DELETE' to cancel the shooting action in progress.
 
-    3. Press 'TAB' to switch the artillery type. The program supports two artillery types: allies and soviet. 
+    3. Press 'SHIFT+TAB' to switch the artillery type. The program supports two artillery types: allies and soviet. 
        It will announce the current artillery type upon switching.
 
     4. During the game, you can input a four-digit number. After inputting the number, press 'CAPSLOCK' to calculate 
@@ -115,19 +117,15 @@ if __name__ == '__main__':
 
     """)
 
-    init_audio()
-
     # Assign hotkeys to perform #actions
     for i in range(1, 10):
         keyboard.add_hotkey(f'SHIFT+{i}',
                             lambda x=i: threading.Thread(target=reload_and_shoot, args=(x,)).start())
 
     keyboard.add_hotkey('DELETE', stop_execution)
-    keyboard.add_hotkey('TAB', switch_arty_type)
+    keyboard.add_hotkey('SHIFT+TAB', switch_arty_type)
     keyboard.add_hotkey('CAPSLOCK', calculate_levitation)
     keyboard.on_press(record_number, suppress=False)
 
     keyboard.wait('SHIFT+Q')
     terminate_audio()
-
-    # python -m PyInstaller --icon=arty.ico -F arty_reload.py
