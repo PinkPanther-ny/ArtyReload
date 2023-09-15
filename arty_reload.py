@@ -10,6 +10,8 @@ stop = False
 in_progress = False
 number_buffer = [0, 0, 0, 0]
 
+arty_type_is_allies = True
+
 
 def hold_key(key, duration):
     print(f"Holding {key}")
@@ -30,12 +32,14 @@ def _reload_and_shoot():
     hold_key('f2', 1.4)
     time.sleep(0.1)
 
+    print("Reloading")
     do_task_for_time(lambda: keyboard.send('R'), 1)
     time.sleep(2.6)
 
     hold_key('f1', 1.4)
     time.sleep(0.1)
 
+    print("Fire!")
     do_task_for_time(lambda: mouse.click(), 0.4)
 
 
@@ -45,7 +49,6 @@ def reload_and_shoot(n):
         return
     in_progress = True
 
-    t0 = time.time()
     stop = False
 
     count_shoot = 0
@@ -57,7 +60,6 @@ def reload_and_shoot(n):
         _reload_and_shoot()
         count_shoot += 1
 
-    print((time.time() - t0) / n)
     print(f"Shoot {count_shoot} finished")
     speak(f"Shoot {count_shoot} finished")
     in_progress = False
@@ -82,11 +84,37 @@ def calculate_levitation():
     if 100 <= distance <= 1600:
         allies = round(-0.237 * distance + 1001.7)
         soviet = round(-0.213 * distance + 1141.3)
-        print(f"Distance {distance}, levitation: {allies}, {soviet}")
-        speak(f"Distance {distance}, levitation: {allies}, {soviet}")
+        print(f"Distance {distance}, levitation: allies {allies}, soviet {soviet}")
+        speak(f"{allies if arty_type_is_allies else soviet}")
+
+
+def switch_arty_type():
+    global arty_type_is_allies
+    arty_type_is_allies = not arty_type_is_allies
+    speak(f"Artillery type switched, currently {'allies' if arty_type_is_allies else 'soviet'}")
 
 
 if __name__ == '__main__':
+    print("""
+    Instruction:
+    The program simulates artillery shooting and calculates levitation based on distance.
+
+    1. Press 'SHIFT+number' (number from 1 to 9) to initiate reloading and shooting the specified number of times. 
+       For example, 'SHIFT+3' will reload and shoot three times.
+
+    2. Press 'DELETE' to cancel the shooting action in progress.
+
+    3. Press 'TAB' to switch the artillery type. The program supports two artillery types: allies and soviet. 
+       It will announce the current artillery type upon switching.
+
+    4. During the game, you can input a four-digit number. After inputting the number, press 'CAPSLOCK' to calculate 
+       and announce the levitation for the current artillery type based on the inputted distance. The distance should be 
+       between 100 and 1600.
+
+    5. To exit the program, press 'SHIFT+Q'.
+
+    """)
+
     init_audio()
 
     # Assign hotkeys to perform #actions
@@ -95,11 +123,11 @@ if __name__ == '__main__':
                             lambda x=i: threading.Thread(target=reload_and_shoot, args=(x,)).start())
 
     keyboard.add_hotkey('DELETE', stop_execution)
-    # keyboard.add_hotkey('SHIFT+Q', exit_program)
+    keyboard.add_hotkey('TAB', switch_arty_type)
     keyboard.add_hotkey('CAPSLOCK', calculate_levitation)
     keyboard.on_press(record_number, suppress=False)
 
     keyboard.wait('SHIFT+Q')
     terminate_audio()
 
-    # pyinstaller.exe --icon=arty.ico -F arty_reload.py --noconsole
+    # python -m PyInstaller --icon=arty.ico -F arty_reload.py
