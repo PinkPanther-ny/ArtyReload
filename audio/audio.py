@@ -32,10 +32,11 @@ def speak(text):
 
 def init_audio():
     global _queue, _process  # Make sure to reference the global variables
-    multiprocessing.freeze_support()
     _queue = multiprocessing.Queue()
     _process = multiprocessing.Process(target=api_process, args=(_queue,))
     _process.start()
+
+    print("init_audio")
 
 
 def terminate_audio():
