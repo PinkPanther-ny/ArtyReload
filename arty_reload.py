@@ -1,16 +1,20 @@
+import math
+import multiprocessing
 import threading
 import time
 
 import keyboard
 import mouse
 
-from audio import speak, terminate_audio
+from audio import speak, terminate_audio, init_audio
 
 stop = False
 in_progress = False
 number_buffer = [0, 0, 0, 0]
 
 arty_type_is_allies = True
+arty_location = (-1, -1)
+SECOND_POSITION_OFFSET = -47
 
 
 def hold_key(key, duration):
@@ -95,8 +99,40 @@ def switch_arty_type():
     speak(f"Artillery type switched, currently {'allies' if arty_type_is_allies else 'soviet'}")
 
 
+def set_arty_location():
+    global arty_location
+    arty_location = mouse.get_position()
+    print(f"Artillery location set, {arty_location}")
+    speak(f"Artillery location set, {arty_location}")
+
+
+def calculate_angle():
+    global arty_location
+    if arty_location == (-1, -1):
+        print(f"Artillery location not set")
+        speak(f"Artillery location not set")
+        return
+
+    cx, cy = arty_location
+    px, py = mouse.get_position()
+
+    dx = px - cx
+    dy = py - cy
+
+    angle = math.degrees(math.atan2(-dy, dx))
+
+    final_angle = (90 - angle) % 360 + SECOND_POSITION_OFFSET
+    if final_angle < 0:
+        final_angle += 360
+
+    print(f"Artillery angle, {round(final_angle, 1)}")
+    speak(f"Artillery angle, {round(final_angle, 1)}")
+
+
 if __name__ == '__main__':
 
+    multiprocessing.freeze_support()
+    init_audio()
     print("""
     Instruction:
     The program simulates artillery shooting and calculates levitation based on distance.
@@ -109,11 +145,13 @@ if __name__ == '__main__':
     3. Press 'SHIFT+TAB' to switch the artillery type. The program supports two artillery types: allies and soviet. 
        It will announce the current artillery type upon switching.
 
-    4. During the game, you can input a four-digit number. After inputting the number, press 'CAPSLOCK' to calculate 
+    4. Press 'SHIFT+O' to set artillery location. Press 'SHIFT+P' to calculate artillery angle from second position. 
+
+    5. During the game, you can input a four-digit number. After inputting the number, press 'CAPSLOCK' to calculate 
        and announce the levitation for the current artillery type based on the inputted distance. The distance should be 
        between 100 and 1600.
 
-    5. To exit the program, press 'SHIFT+Q'.
+    6. To exit the program, press 'SHIFT+Q'.
 
     """)
 
@@ -125,6 +163,8 @@ if __name__ == '__main__':
     keyboard.add_hotkey('DELETE', stop_execution)
     keyboard.add_hotkey('SHIFT+TAB', switch_arty_type)
     keyboard.add_hotkey('CAPSLOCK', calculate_levitation)
+    keyboard.add_hotkey('right shift+O', set_arty_location)
+    keyboard.add_hotkey('right shift+P', calculate_angle)
     keyboard.on_press(record_number, suppress=False)
 
     keyboard.wait('SHIFT+Q')
