@@ -83,13 +83,17 @@ def record_number(key: keyboard.KeyboardEvent):
         number_buffer.append(int(key.name))
 
 
-def calculate_levitation():
-    distance = sum(number_buffer[idx] * 10 ** (3 - idx) for idx in range(4))
+def calculate_levitation(distance):
     if 100 <= distance <= 1600:
         allies = round(-0.237 * distance + 1001.7)
         soviet = round(-0.213 * distance + 1141.3)
         print(f"Distance {distance}, levitation: allies {allies}, soviet {soviet}")
         speak(f"{allies if arty_type_is_allies else soviet}")
+
+
+def calculate_levitation_from_keyboard():
+    distance = sum(number_buffer[idx] * 10 ** (3 - idx) for idx in range(4))
+    calculate_levitation(distance)
 
 
 def switch_arty_type():
@@ -103,10 +107,10 @@ def set_arty_location():
     global arty_location
     arty_location = mouse.get_position()
     print(f"Artillery location set, {arty_location}")
-    speak(f"Artillery location set, {arty_location}")
+    speak(f"Artillery location set")
 
 
-def calculate_angle():
+def calculate_angle_and_distance():
     global arty_location
     if arty_location == (-1, -1):
         print(f"Artillery location not set")
@@ -126,7 +130,13 @@ def calculate_angle():
         final_angle += 360
 
     print(f"Artillery angle, {round(final_angle, 1)}")
-    speak(f"Artillery angle, {round(final_angle, 1)}")
+    speak(f"{round(final_angle, 1)}")
+
+    # 88 pixels per 200m block
+    pixel_distance = math.sqrt((cx - px)**2 + (cy - py)**2)
+    distance = pixel_distance * (200 / 88)
+
+    calculate_levitation(distance)
 
 
 if __name__ == '__main__':
@@ -162,9 +172,9 @@ if __name__ == '__main__':
 
     keyboard.add_hotkey('DELETE', stop_execution)
     keyboard.add_hotkey('SHIFT+TAB', switch_arty_type)
-    keyboard.add_hotkey('CAPSLOCK', calculate_levitation)
+    keyboard.add_hotkey('CAPSLOCK', calculate_levitation_from_keyboard)
     keyboard.add_hotkey('right shift+O', set_arty_location)
-    keyboard.add_hotkey('right shift+P', calculate_angle)
+    keyboard.add_hotkey('right shift+P', calculate_angle_and_distance)
     keyboard.on_press(record_number, suppress=False)
 
     keyboard.wait('SHIFT+Q')
