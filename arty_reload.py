@@ -1,12 +1,17 @@
-import math
 import multiprocessing
 import threading
 import time
 
 import keyboard
 import mouse
+import pyautogui
 
 from audio import speak, terminate_audio, init_audio
+from ocr import AngleDetector
+from util import get_distance_from_map, get_angle_from_map, shortest_turn_direction
+
+pyautogui.FAILSAFE = False
+angle_detector = AngleDetector()
 
 stop = False
 in_progress = False
@@ -87,8 +92,10 @@ def calculate_levitation(distance):
     if 100 <= distance <= 1600:
         allies = round(-0.237 * distance + 1001.7)
         soviet = round(-0.213 * distance + 1141.3)
-        print(f"Distance {distance}, levitation: allies {allies}, soviet {soviet}")
-        speak(f"{allies if arty_type_is_allies else soviet}")
+        levitation = allies if arty_type_is_allies else soviet
+        print(f"Distance {round(distance)}, levitation: allies {allies}, soviet {soviet}")
+        speak(f"{levitation}")
+        return levitation
 
 
 def calculate_levitation_from_keyboard():
@@ -117,26 +124,48 @@ def calculate_angle_and_distance():
         speak(f"Artillery location not set")
         return
 
-    cx, cy = arty_location
-    px, py = mouse.get_position()
+    origin, target = arty_location, mouse.get_position()
 
-    dx = px - cx
-    dy = py - cy
+    angle = get_angle_from_map(origin, target)
+    distance = get_distance_from_map(origin, target)
 
-    angle = math.degrees(math.atan2(-dy, dx))
+    print(f"Artillery angle, {round(angle, 1)}")
+    speak(f"{round(angle, 1)}")
 
-    final_angle = (90 - angle) % 360 + SECOND_POSITION_OFFSET
-    if final_angle < 0:
-        final_angle += 360
+    levitation = calculate_levitation(distance)
 
-    print(f"Artillery angle, {round(final_angle, 1)}")
-    speak(f"{round(final_angle, 1)}")
+    return angle, levitation
 
-    # 88 pixels per 200m block
-    pixel_distance = math.sqrt((cx - px)**2 + (cy - py)**2)
-    distance = pixel_distance * (200 / 88)
 
-    calculate_levitation(distance)
+def move_arty():
+    try:
+        target_angle, levitation = calculate_angle_and_distance()
+    except TypeError:
+        return
+
+    pyautogui.press('M')
+    time.sleep(0.2)
+
+    current_1_angle = angle_detector.get_angle()
+    if current_1_angle == -1:
+        speak(f"Invalid direction!")
+        print(f"Invalid direction!")
+        return
+
+    turn_direction, d_angle = shortest_turn_direction((current_1_angle + SECOND_POSITION_OFFSET) % 360, target_angle)
+    speak(f"{turn_direction}, {round(d_angle)}")
+    print(f"{turn_direction}, {round(d_angle)}")
+
+    hold_key('f2', 1.4)
+    time.sleep(0.1)
+    # Weird bug
+    pyautogui.keyDown(turn_direction)
+    time.sleep(abs(d_angle))
+    pyautogui.keyUp(turn_direction)
+    # hold_key(turn_direction, abs(d_angle))
+
+    hold_key('f1', 1.4)
+    time.sleep(0.1)
 
 
 if __name__ == '__main__':
@@ -175,6 +204,7 @@ if __name__ == '__main__':
     keyboard.add_hotkey('CAPSLOCK', calculate_levitation_from_keyboard)
     keyboard.add_hotkey('right shift+O', set_arty_location)
     keyboard.add_hotkey('right shift+P', calculate_angle_and_distance)
+    keyboard.add_hotkey('right ctrl+right shift+P', move_arty)
     keyboard.on_press(record_number, suppress=False)
 
     keyboard.wait('SHIFT+Q')
