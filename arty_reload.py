@@ -7,11 +7,10 @@ import mouse
 import pyautogui
 
 from audio import speak, terminate_audio, init_audio
-from ocr import AngleDetector
-from util import get_distance_from_map, get_angle_from_map, shortest_turn_direction
+from ocr import get_arty_angle
+from util import get_angle_from_map, shortest_turn_direction, get_distance_from_map
 
 pyautogui.FAILSAFE = False
-angle_detector = AngleDetector()
 
 stop = False
 in_progress = False
@@ -94,7 +93,11 @@ def calculate_levitation(distance):
         soviet = round(-0.213 * distance + 1141.3)
         levitation = allies if arty_type_is_allies else soviet
         print(f"Distance {round(distance)}, levitation: allies {allies}, soviet {soviet}")
-        speak(f"{levitation}")
+        speak(f"levitation {levitation}")
+
+        global number_buffer
+        number_buffer = [int(c) for c in str(round(distance)).zfill(4)]
+
         return levitation
 
 
@@ -117,48 +120,45 @@ def set_arty_location():
     speak(f"Artillery location set")
 
 
-def calculate_angle_and_distance():
+def calculate_target_angle(origin, target):
     global arty_location
     if arty_location == (-1, -1):
         print(f"Artillery location not set")
         speak(f"Artillery location not set")
-        return
-
-    origin, target = arty_location, mouse.get_position()
+        return None
 
     angle = get_angle_from_map(origin, target)
-    distance = get_distance_from_map(origin, target)
 
     print(f"Artillery angle, {round(angle, 1)}")
-    speak(f"{round(angle, 1)}")
+    speak(f"Angle {round(angle, 1)}")
 
-    levitation = calculate_levitation(distance)
-
-    return angle, levitation
+    return angle
 
 
 def move_arty():
-    try:
-        target_angle, levitation = calculate_angle_and_distance()
-    except TypeError:
+    origin, target = arty_location, mouse.get_position()
+
+    distance = get_distance_from_map(origin, target)
+    calculate_levitation(distance)
+
+    target_angle = calculate_target_angle(origin, target)
+    if target_angle is None:
         return
 
     pyautogui.press('M')
     time.sleep(0.2)
 
-    current_1_angle = angle_detector.get_angle()
+    current_1_angle = get_arty_angle()
     if current_1_angle == -1:
         speak(f"Invalid direction!")
         print(f"Invalid direction!")
         return
 
     turn_direction, d_angle = shortest_turn_direction((current_1_angle + SECOND_POSITION_OFFSET) % 360, target_angle)
-    speak(f"{turn_direction}, {round(d_angle)}")
-    print(f"{turn_direction}, {round(d_angle)}")
 
     hold_key('f2', 1.4)
     time.sleep(0.1)
-    # Weird bug
+    # Use pyautogui to press key which is more stable
     pyautogui.keyDown(turn_direction)
     time.sleep(abs(d_angle))
     pyautogui.keyUp(turn_direction)
@@ -203,7 +203,6 @@ if __name__ == '__main__':
     keyboard.add_hotkey('SHIFT+TAB', switch_arty_type)
     keyboard.add_hotkey('CAPSLOCK', calculate_levitation_from_keyboard)
     keyboard.add_hotkey('right shift+O', set_arty_location)
-    keyboard.add_hotkey('right shift+P', calculate_angle_and_distance)
     keyboard.add_hotkey('right ctrl+right shift+P', move_arty)
     keyboard.on_press(record_number, suppress=False)
 

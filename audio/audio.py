@@ -36,8 +36,6 @@ def init_audio():
     _process = multiprocessing.Process(target=api_process, args=(_queue,))
     _process.start()
 
-    print("init_audio")
-
 
 def terminate_audio():
     global _queue, _process  # Make sure to reference the global variables
