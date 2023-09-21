@@ -5,7 +5,6 @@ import pytesseract
 class AngleDetector:
     def __init__(self):
         self._current_angle = -1
-        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
 
     def get_angle(self):
         im = ImageGrab.grab(bbox=(950, 1030, 970, 1045))
