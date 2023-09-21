@@ -1,4 +1,4 @@
-import pyscreenshot as ImageGrab
+import PIL.ImageGrab as ImageGrab
 import pytesseract
 
 
