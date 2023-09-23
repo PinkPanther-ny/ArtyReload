@@ -156,14 +156,22 @@ def move_arty():
 
     hold_key('f2', 1.4)
     time.sleep(0.1)
-    # Use pyautogui to press key which is more stable
-    pyautogui.keyDown(turn_direction)
-    time.sleep(abs(d_angle))
-    pyautogui.keyUp(turn_direction)
-    # hold_key(turn_direction, abs(d_angle))
-
+    hold_key(turn_direction, abs(d_angle))
     hold_key('f1', 1.4)
     time.sleep(0.1)
+
+
+def redeploy():
+    time.sleep(0.3)
+    pyautogui.click(150, 700)
+    pyautogui.click(840, 590)
+    for _ in range(5):
+        time.sleep(10)
+        try:
+            pyautogui.locateOnScreen('images/REDEPLOY.png', region=(760, 520, 1200, 580))
+            pyautogui.press('space')
+        except pyautogui.ImageNotFoundException:
+            pass
 
 
 if __name__ == '__main__':
@@ -200,8 +208,9 @@ if __name__ == '__main__':
     keyboard.add_hotkey('DELETE', stop_execution)
     keyboard.add_hotkey('SHIFT+TAB', switch_arty_type)
     keyboard.add_hotkey('CAPSLOCK', calculate_levitation_from_keyboard)
-    keyboard.add_hotkey('right shift+O', set_arty_location)
-    keyboard.add_hotkey('right ctrl+right shift+P', move_arty)
+    keyboard.add_hotkey('CTRL+S', set_arty_location)
+    keyboard.add_hotkey('CTRL+SHIFT+S', move_arty)
+    keyboard.add_hotkey('SHIFT+ESC', redeploy)
     keyboard.on_press(record_number, suppress=False)
 
     keyboard.wait('SHIFT+Q')
