@@ -6,8 +6,9 @@ import keyboard
 import pyautogui
 
 from audio import speak, terminate_audio, init_audio
-from ocr import get_arty_angle
-from util import get_angle_from_map, shortest_turn_direction, get_distance_from_map
+from ocr import get_arty_angle, get_arty_mil
+from util import get_angle_from_map, shortest_turn_direction, get_distance_from_map, switch_to_second, hold_key, \
+    do_task_for_time
 
 pyautogui.FAILSAFE = False
 
@@ -17,33 +18,13 @@ number_buffer = [0, 0, 0, 0]
 
 arty_type_is_allies = True
 arty_location = (-1, -1)
-SECOND_POSITION_OFFSET = -47
-
-
-def hold_key(key, duration):
-    with pyautogui.hold(key):
-        print(f"Holding {key}")
-        time.sleep(duration)
-        print(f"Release {key}")
-
-
-def do_task_for_time(task, duration, fps=100):
-    t0 = time.time()
-    while time.time() - t0 < duration:
-        task()
-        time.sleep(1 / fps)
 
 
 def _reload_and_shoot():
-    hold_key('f2', 1.4)
-    time.sleep(0.1)
-
-    print("Reloading")
-    do_task_for_time(lambda: pyautogui.press('R'), 1)
-    time.sleep(2.6)
-
-    hold_key('f1', 1.4)
-    time.sleep(0.1)
+    with switch_to_second():
+        print("Reloading")
+        do_task_for_time(lambda: pyautogui.press('R'), 1)
+        time.sleep(2.6)
 
     print("Fire!")
     do_task_for_time(lambda: pyautogui.click(), 0.4)
@@ -91,7 +72,6 @@ def calculate_levitation(distance):
         soviet = round(-0.213 * distance + 1141.3)
         levitation = allies if arty_type_is_allies else soviet
         print(f"Distance {round(distance)}, levitation: allies {allies}, soviet {soviet}")
-        speak(f"levitation {levitation}")
 
         global number_buffer
         number_buffer = [int(c) for c in str(round(distance)).zfill(4)]
@@ -101,7 +81,8 @@ def calculate_levitation(distance):
 
 def calculate_levitation_from_keyboard():
     distance = sum(number_buffer[idx] * 10 ** (3 - idx) for idx in range(4))
-    calculate_levitation(distance)
+    levitation = calculate_levitation(distance)
+    speak(f"levitation {levitation}")
 
 
 def switch_arty_type():
@@ -118,33 +99,25 @@ def set_arty_location():
     speak(f"Artillery location set")
 
 
-def calculate_target_angle(origin, target):
+def move_arty():
     global arty_location
     if arty_location == (-1, -1):
         print(f"Artillery location not set")
         speak(f"Artillery location not set")
-        return None
-
-    angle = get_angle_from_map(origin, target)
-
-    print(f"Artillery angle, {round(angle, 1)}")
-    speak(f"Angle {round(angle, 1)}")
-
-    return angle
-
-
-def move_arty():
-    origin, target = arty_location, pyautogui.position()
-
-    distance = get_distance_from_map(origin, target)
-    calculate_levitation(distance)
-
-    target_angle = calculate_target_angle(origin, target)
-    if target_angle is None:
         return
+
+    origin, target = arty_location, pyautogui.position()
 
     pyautogui.press('M')
     time.sleep(0.2)
+
+    # Gather info
+    # TODO: Add value manual check
+    current_levitation = get_arty_mil()
+    if current_levitation == -1:
+        speak(f"Invalid levitation!")
+        print(f"Invalid levitation!")
+        return
 
     current_1_angle = get_arty_angle()
     if current_1_angle == -1:
@@ -152,13 +125,27 @@ def move_arty():
         print(f"Invalid direction!")
         return
 
-    turn_direction, d_angle = shortest_turn_direction((current_1_angle + SECOND_POSITION_OFFSET) % 360, target_angle)
+    # Calculate target levitation and direction
+    target_distance = get_distance_from_map(origin, target)
+    target_levitation = calculate_levitation(target_distance)
 
-    hold_key('f2', 1.4)
-    time.sleep(0.1)
-    hold_key(turn_direction, abs(d_angle))
-    hold_key('f1', 1.4)
-    time.sleep(0.1)
+    target_angle = get_angle_from_map(origin, target)
+    turn_direction, d_angle = shortest_turn_direction(current_1_angle, target_angle)
+
+    speak(f"Current angle {current_1_angle}, target angle {round(target_angle, 1)}")
+    print(f"Current angle {current_1_angle}, target angle {round(target_angle, 1)}")
+
+    speak(f"Current levitation {current_levitation}, target levitation {round(target_levitation)}")
+    print(f"Current levitation {current_levitation}, target levitation {round(target_levitation)}")
+
+    # Adjust levitation and direction
+    hold_key(
+        'W' if current_levitation < target_levitation else 'S',
+        0.2246 * abs(current_levitation - target_levitation)
+    )
+
+    with switch_to_second():
+        hold_key(turn_direction, abs(d_angle))
 
 
 def redeploy():

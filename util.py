@@ -1,6 +1,9 @@
 import math
+import time
+from contextlib import contextmanager
+from functools import wraps
 
-SECOND_POSITION_OFFSET = -47
+import pyautogui
 
 
 def get_angle_from_map(origin, target):
@@ -12,7 +15,7 @@ def get_angle_from_map(origin, target):
 
     angle = math.degrees(math.atan2(-dy, dx))
 
-    angle = (90 - angle) % 360 + SECOND_POSITION_OFFSET
+    angle = (90 - angle) % 360
     if angle < 0:
         angle += 360
 
@@ -47,3 +50,49 @@ def shortest_turn_direction(current_dir, target_dir):
             return 'D', diff_inside
         else:
             return 'A', diff_outside
+
+
+def hold_key(key, duration):
+    with pyautogui.hold(key):
+        print(f"Holding {key}")
+        time.sleep(duration)
+        print(f"Release {key}")
+
+
+def do_task_for_time(task, duration, fps=100):
+    t0 = time.time()
+    while time.time() - t0 < duration:
+        task()
+        time.sleep(1 / fps)
+
+
+def manual_check_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        print(f"Function {func.__name__} returned {result}. Is this okay? [Press Enter if yes]")
+        user_input = input()
+
+        if user_input == "":
+            return result
+        else:
+            try:
+                new_result = float(user_input)
+                print(f"Returning manually entered value: {new_result}")
+                return new_result
+            except ValueError:
+                print("Invalid input. Returning original result.")
+                return result
+
+    return wrapper
+
+
+@contextmanager
+def switch_to_second():
+    try:
+        hold_key('F2', 1.4)
+        time.sleep(0.1)
+        yield  # This is where foo() will be executed.
+    finally:
+        hold_key('F1', 1.4)
+        time.sleep(0.1)
