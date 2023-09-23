@@ -67,16 +67,15 @@ def record_number(key: keyboard.KeyboardEvent):
 
 
 def calculate_levitation(distance):
-    if 100 <= distance <= 1600:
-        allies = round(-0.237 * distance + 1001.7)
-        soviet = round(-0.213 * distance + 1141.3)
-        levitation = allies if arty_type_is_allies else soviet
-        print(f"Distance {round(distance)}, levitation: allies {allies}, soviet {soviet}")
+    allies = round(-0.237 * distance + 1001.7)
+    soviet = round(-0.213 * distance + 1141.3)
+    levitation = allies if arty_type_is_allies else soviet
+    print(f"Distance {round(distance)}, levitation: allies {allies}, soviet {soviet}")
 
-        global number_buffer
-        number_buffer = [int(c) for c in str(round(distance)).zfill(4)]
+    global number_buffer
+    number_buffer = [int(c) for c in str(round(distance)).zfill(4)]
 
-        return levitation
+    return levitation
 
 
 def calculate_levitation_from_keyboard():
@@ -108,6 +107,12 @@ def move_arty():
 
     origin, target = arty_location, pyautogui.position()
 
+    target_distance = get_distance_from_map(origin, target)
+    if not (100 <= target_distance <= 1600):
+        speak(f"Invalid distance!")
+        print(f"Invalid distance!")
+        return
+
     pyautogui.press('M')
     time.sleep(0.2)
 
@@ -126,9 +131,7 @@ def move_arty():
         return
 
     # Calculate target levitation and direction
-    target_distance = get_distance_from_map(origin, target)
     target_levitation = calculate_levitation(target_distance)
-
     target_angle = get_angle_from_map(origin, target)
     turn_direction, d_angle = shortest_turn_direction(current_1_angle, target_angle)
 
