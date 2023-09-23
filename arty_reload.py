@@ -3,7 +3,6 @@ import threading
 import time
 
 import keyboard
-import mouse
 import pyautogui
 
 from audio import speak, terminate_audio, init_audio
@@ -22,11 +21,10 @@ SECOND_POSITION_OFFSET = -47
 
 
 def hold_key(key, duration):
-    print(f"Holding {key}")
-    keyboard.press(key)
-    time.sleep(duration)
-    keyboard.release(key)
-    print(f"Release {key}")
+    with pyautogui.hold(key):
+        print(f"Holding {key}")
+        time.sleep(duration)
+        print(f"Release {key}")
 
 
 def do_task_for_time(task, duration, fps=100):
@@ -41,14 +39,14 @@ def _reload_and_shoot():
     time.sleep(0.1)
 
     print("Reloading")
-    do_task_for_time(lambda: keyboard.send('R'), 1)
+    do_task_for_time(lambda: pyautogui.press('R'), 1)
     time.sleep(2.6)
 
     hold_key('f1', 1.4)
     time.sleep(0.1)
 
     print("Fire!")
-    do_task_for_time(lambda: mouse.click(), 0.4)
+    do_task_for_time(lambda: pyautogui.click(), 0.4)
 
 
 def reload_and_shoot(n):
@@ -115,7 +113,7 @@ def switch_arty_type():
 
 def set_arty_location():
     global arty_location
-    arty_location = mouse.get_position()
+    arty_location = pyautogui.position()
     print(f"Artillery location set, {arty_location}")
     speak(f"Artillery location set")
 
@@ -136,7 +134,7 @@ def calculate_target_angle(origin, target):
 
 
 def move_arty():
-    origin, target = arty_location, mouse.get_position()
+    origin, target = arty_location, pyautogui.position()
 
     distance = get_distance_from_map(origin, target)
     calculate_levitation(distance)
