@@ -1,9 +1,9 @@
 import math
 import time
 from contextlib import contextmanager
-from functools import wraps
 
 import pyautogui
+import win32gui
 
 
 def get_angle_from_map(origin, target):
@@ -66,25 +66,18 @@ def do_task_for_time(task, duration, fps=100):
         time.sleep(1 / fps)
 
 
-def manual_check_decorator(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        print(f"Function {func.__name__} returned {result}. Is this okay? [Press Enter if yes]")
-        user_input = input()
-
-        if user_input == "":
-            return result
-        else:
-            try:
-                new_result = float(user_input)
-                print(f"Returning manually entered value: {new_result}")
-                return new_result
-            except ValueError:
-                print("Invalid input. Returning original result.")
-                return result
-
-    return wrapper
+def redeploy():
+    time.sleep(0.3)
+    pyautogui.click(150, 700)
+    pyautogui.click(840, 590)
+    for _ in range(10):
+        time.sleep(10)
+        try:
+            pyautogui.locateOnScreen('images/REDEPLOY.png', region=(760, 520, 1200, 580))
+            pyautogui.press('space')
+            return
+        except pyautogui.ImageNotFoundException:
+            pass
 
 
 @contextmanager
@@ -96,3 +89,17 @@ def switch_to_second():
     finally:
         hold_key('F1', 1.4)
         time.sleep(0.1)
+
+
+# Function to set focus to another window (e.g., a game)
+def switch_focus_to(game_window_title):
+    hwnd = win32gui.FindWindow(None, game_window_title)
+    if hwnd != 0:
+        try:
+            win32gui.ShowWindow(hwnd, 5)
+            win32gui.SetForegroundWindow(hwnd)
+        except:
+            print(f"Failed to switch focus.")
+            pass
+    else:
+        print(f"Window with title '{game_window_title}' not found.")

@@ -1,8 +1,6 @@
 import PIL.ImageGrab as ImageGrab
 import pytesseract
 
-from util import manual_check_decorator
-
 
 def resize_by_ratio(im, r):
     width, height = im.size
@@ -18,7 +16,7 @@ def get_arty_angle():
     if result != '' and 0 <= int(result) <= 360:
         return int(result)
     else:
-        return -1
+        return 0
 
 
 # @manual_check_decorator
@@ -31,4 +29,4 @@ def get_arty_mil():
     if result.isdigit():
         return int(result)
     else:
-        return -1
+        return 0
