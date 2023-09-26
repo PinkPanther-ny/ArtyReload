@@ -22,9 +22,9 @@ DefaultDirName={autopf}\{#MyAppName}
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputDir=D:\Code\ArtyReload\dist
+OutputDir=D:\Code\Auto-Arty\dist
 OutputBaseFilename=Auto-Arty_setup_onedir
-SetupIconFile=D:\Code\ArtyReload\images\arty.ico
+SetupIconFile=D:\Code\Auto-Arty\images\arty.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -36,8 +36,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}";
 
 [Files]
-Source: "D:\Code\ArtyReload\dist\Auto-Arty\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\Code\ArtyReload\dist\Auto-Arty\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "D:\Code\Auto-Arty\dist\Auto-Arty\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\Code\Auto-Arty\dist\Auto-Arty\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
