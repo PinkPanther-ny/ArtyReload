@@ -70,14 +70,16 @@ def redeploy():
     time.sleep(0.3)
     pyautogui.click(150, 700)
     pyautogui.click(840, 590)
-    for _ in range(10):
-        time.sleep(10)
-        try:
-            pyautogui.locateOnScreen('images/REDEPLOY.png', region=(760, 520, 1200, 580))
-            pyautogui.press('space')
-            return
-        except pyautogui.ImageNotFoundException:
-            pass
+    time.sleep(10.3)
+    pyautogui.press('space')
+    # for _ in range(10):
+    #     time.sleep(10)
+    #     try:
+    #         pyautogui.locateOnScreen('images/REDEPLOY.png', region=(760, 520, 1200, 580))
+    #         pyautogui.press('space')
+    #         return
+    #     except pyautogui.ImageNotFoundException:
+    #         pass
 
 
 @contextmanager
