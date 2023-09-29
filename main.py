@@ -15,7 +15,7 @@ from PIL import ImageTk, Image
 from audio import speak, init_audio, terminate_audio
 from log_template import get_aim_string, get_target_string
 from ocr import get_arty_mil, get_arty_angle
-from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to, redeploy
+from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to
 
 pyautogui.FAILSAFE = False
 
@@ -239,6 +239,14 @@ class AutoArtyApp(tk.Tk):
         self.mainloop()
 
     @staticmethod
+    def redeploy():
+        time.sleep(0.3)
+        pyautogui.click(150, 700)
+        pyautogui.click(840, 590)
+        print("Redeploy!")
+        speak("Redeploy!")
+
+    @staticmethod
     def force_quit():
         os._exit(0) # noqa
 
@@ -248,7 +256,7 @@ class AutoArtyApp(tk.Tk):
         keyboard.add_hotkey('CTRL+X', self.update_target)
         keyboard.add_hotkey('CTRL+SPACE', self.confirm)
         keyboard.add_hotkey('CAPSLOCK', self.calculate_levitation_from_keyboard)
-        keyboard.add_hotkey('GRAVE+ESC', redeploy)
+        keyboard.add_hotkey('GRAVE+ESC', self.redeploy)
         keyboard.add_hotkey('CTRL+Q', self.force_quit)
 
         for i in range(1, 10):
