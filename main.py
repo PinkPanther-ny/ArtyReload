@@ -26,7 +26,7 @@ def is_integer(p):
 
 def resource_path(relative_path):
     try:
-        base_path = sys._MEIPASS # noqa
+        base_path = sys._MEIPASS  # noqa
     except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
@@ -169,7 +169,7 @@ class AutoArtyApp(tk.Tk):
         self.geometry(f"{self.winfo_screenwidth()}x{self.winfo_screenheight()}+0+0")
 
         ico = ImageTk.PhotoImage(Image.open(resource_path('images/arty.ico')))
-        self.iconphoto(False, ico) # noqa
+        self.iconphoto(False, ico)  # noqa
 
         # Create a Tcl wrapper for the integer validation function
         self.integer_validation = self.register(is_integer)
@@ -248,7 +248,13 @@ class AutoArtyApp(tk.Tk):
 
     @staticmethod
     def force_quit():
-        os._exit(0) # noqa
+        os._exit(0)  # noqa
+
+    @staticmethod
+    def force_quit_all():
+        name = "HLL-Win64-Shipping.exe"
+        os.system(f'tasklist | find /i "{name}" && taskkill /im {name} /F || echo process "{name}" not running.')
+        os._exit(0)  # noqa
 
     def add_hotkeys(self):
         keyboard.add_hotkey('CTRL+V', self.switch_visibility)
@@ -258,6 +264,7 @@ class AutoArtyApp(tk.Tk):
         keyboard.add_hotkey('CAPSLOCK', self.calculate_levitation_from_keyboard)
         keyboard.add_hotkey('GRAVE+ESC', self.redeploy)
         keyboard.add_hotkey('CTRL+Q', self.force_quit)
+        keyboard.add_hotkey('CTRL+SHIFT+DELETE', self.force_quit_all)
 
         for i in range(1, 10):
             keyboard.add_hotkey(
@@ -332,6 +339,8 @@ if __name__ == "__main__":
     8. Press 'SHIFT+<number>' to initiate the reloading and shooting action <number> times.
 
     9. Press 'GRAVE+ESC' to perform a redeploy action in the game.
+
+    10. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
 
     """)
 
