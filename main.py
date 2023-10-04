@@ -1,6 +1,7 @@
 import math
 import multiprocessing
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -343,7 +344,7 @@ if __name__ == "__main__":
     10. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
 
     """)
-
+    subprocess.run(['start', 'steam://rungameid/686810'], shell=True)
     app = AutoArtyApp()
     app.mainloop()
     terminate_audio()
