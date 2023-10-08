@@ -1,4 +1,6 @@
 import math
+import os
+import sys
 import time
 from contextlib import contextmanager
 
@@ -89,3 +91,11 @@ def switch_focus_to(game_window_title):
             pass
     else:
         print(f"Window with title '{game_window_title}' not found.")
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS  # noqa
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)

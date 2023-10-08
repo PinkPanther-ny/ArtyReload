@@ -2,7 +2,6 @@ import math
 import multiprocessing
 import os
 import subprocess
-import sys
 import threading
 import time
 import tkinter as tk
@@ -11,27 +10,20 @@ from threading import Thread, Lock
 
 import keyboard
 import pyautogui
-from PIL import ImageTk, Image, ImageGrab
+from PIL import ImageTk, Image
 
 from audio import speak, init_audio, terminate_audio
 from build_assist import BuildAssist
 from log_template import get_aim_string, get_target_string
+from magnifier import MagnifierApp
 from ocr import get_arty_mil, get_arty_angle
-from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to
+from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to, resource_path
 
 pyautogui.FAILSAFE = False
 
 
 def is_integer(p):
     return p == "" or p.isdigit()
-
-
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS  # noqa
-    except AttributeError:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
 
 
 class ShootingController:
@@ -173,11 +165,7 @@ class AutoArtyApp(tk.Tk):
         ico = ImageTk.PhotoImage(Image.open(resource_path('images/arty.ico')))
         self.iconphoto(False, ico)  # noqa
 
-        self.canvas0 = tk.Canvas(self, bg='#000000', highlightthickness=0)
-        self.canvas0.pack(fill=tk.BOTH, expand=True)
-
         self.canvas1 = tk.Canvas(self, width=320, height=200, highlightthickness=0)
-        # self.canvas1.place(relx=1720 / 1920, rely=190 / 1080, anchor='center')
         self.tickbox_var = tk.IntVar()
         self.checkbutton = tk.Checkbutton(self.canvas1,
                                           text="Enable Build Assist",
@@ -224,56 +212,8 @@ class AutoArtyApp(tk.Tk):
         self.canvas2.create_line(0, sight_radius, sight_radius * 2, sight_radius, fill='red', dash=(3, 5))
         self.canvas2.create_line(sight_radius, 0, sight_radius, sight_radius * 2, fill='red', dash=(3, 5))
 
-        self.window_size = 230
-        self.mag_ratio = 2
-
-        self.mag_is_visible = True
-        self.canvas_mag = tk.Canvas(self.canvas0, bg='#000000', highlightthickness=2,
-                                    width=self.window_size, height=self.window_size)
-        self.canvas_mag.pack()
-        self.after(100, self.magnify)
-
         self.is_visible = False
         self.add_hotkeys()
-
-    def magnify(self):
-        if keyboard.is_pressed('+') and self.mag_ratio < 5:
-            self.mag_ratio += 0.1
-        elif keyboard.is_pressed('-') and self.mag_ratio > 1.2:
-            self.mag_ratio -= 0.1
-        mag_area = round(self.window_size / self.mag_ratio)
-
-        # Get screen size
-        screen_width, screen_height = pyautogui.size()
-
-        # Coordinates of the center of the screen
-        x_center_screen = screen_width // 2
-        y_center_screen = screen_height // 2
-
-        # Capture the screen region around the center
-        screenshot = ImageGrab.grab(
-            bbox=(x_center_screen - mag_area // 2, y_center_screen - mag_area // 2,
-                  x_center_screen + mag_area // 2, y_center_screen + mag_area // 2)
-        )
-
-        # Resize the screenshot to simulate magnification
-        screenshot = screenshot.resize((self.window_size, self.window_size))
-
-        # Convert the screenshot to a format Tkinter can use
-        tkimage = ImageTk.PhotoImage(screenshot)
-
-        # Remove the old magnified image if it exists
-        self.canvas_mag.delete("magnified")
-
-        # Place the new magnified image on the canvas
-        self.canvas_mag.create_image(self.canvas_mag.winfo_width() // 2, self.canvas_mag.winfo_height() // 2,
-                                     image=tkimage, tags="magnified")
-
-        # Keep the reference to avoid garbage collection
-        self.canvas_mag.image = tkimage
-
-        # Update the canvas
-        self.canvas_mag.after(5, self.magnify)
 
     def toggle_build_assist(self):
         if self.tickbox_var.get():
@@ -300,21 +240,11 @@ class AutoArtyApp(tk.Tk):
 
     def hide(self):
         self.canvas1.place_forget()
-        # self.wm_attributes("-alpha", 0)
         self.is_visible = False
 
     def show(self):
         self.canvas1.place(relx=1720 / 1920, rely=190 / 1080, anchor='center')
-        # self.wm_attributes("-alpha", 0.5)
         self.is_visible = True
-
-    def mag_switch_visibility(self):
-        if self.mag_is_visible:
-            self.canvas_mag.pack_forget()
-            self.mag_is_visible = False
-        else:
-            self.canvas_mag.pack()
-            self.mag_is_visible = True
 
     def run(self):
         self.mainloop()
@@ -339,8 +269,7 @@ class AutoArtyApp(tk.Tk):
 
     def add_hotkeys(self):
 
-        keyboard.add_hotkey('CTRL+V', self.switch_visibility)
-        keyboard.add_hotkey('CTRL+B', self.mag_switch_visibility)
+        keyboard.add_hotkey('CTRL+C', self.switch_visibility)
         keyboard.add_hotkey('CTRL+SHIFT+X', self.update_arty)
         keyboard.add_hotkey('CTRL+X', self.update_target)
         keyboard.add_hotkey('CTRL+SPACE', self.confirm)
@@ -427,6 +356,7 @@ if __name__ == "__main__":
 
     """)
     subprocess.run(['start', 'steam://rungameid/686810'], shell=True)
-    app = AutoArtyApp()
-    app.mainloop()
+    main_app = AutoArtyApp()
+    magnifier_app = MagnifierApp()
+    tk.mainloop()
     terminate_audio()
