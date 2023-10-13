@@ -36,11 +36,15 @@ class MagnifierCanvas(tk.Canvas):
         cap_width = round(self.winfo_width() / self.mag_ratio)
         cap_height = round(self.winfo_height() / self.mag_ratio)
 
-        # Capture the screen region around the center
-        screenshot = ImageGrab.grab(
-            bbox=(self.x_center_screen - cap_width // 2, self.y_center_screen - cap_height // 2,
-                  self.x_center_screen + cap_width // 2, self.y_center_screen + cap_height // 2)
-        )
+        try:
+            # Capture the screen region around the center
+            screenshot = ImageGrab.grab(
+                bbox=(self.x_center_screen - cap_width // 2, self.y_center_screen - cap_height // 2,
+                      self.x_center_screen + cap_width // 2, self.y_center_screen + cap_height // 2)
+            )
+        except OSError:
+            self.after(5, self.magnify)
+            return
 
         # Resize the screenshot to simulate magnification
         screenshot = screenshot.resize((self.winfo_width(), self.winfo_height()))
@@ -56,7 +60,6 @@ class MagnifierCanvas(tk.Canvas):
         self.create_image(self.winfo_width() // 2, self.winfo_height() // 2,
                           image=self.image, tags="magnified")
 
-        # Update the canvas
         self.after(5, self.magnify)
 
     def hide(self):
