@@ -4,6 +4,7 @@ import sys
 import time
 from contextlib import contextmanager
 
+import psutil
 import pyautogui
 import win32gui
 
@@ -99,3 +100,13 @@ def resource_path(relative_path):
     except AttributeError:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
+
+def check_process_exists(process_name):
+    for process in psutil.process_iter(['pid', 'name']):
+        try:
+            if process.name() == process_name:
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False

@@ -17,7 +17,7 @@ from build_assist import BuildAssist
 from log_template import get_aim_string, get_target_string
 from magnifier import MagnifierApp
 from ocr import get_arty_mil, get_arty_angle
-from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to, resource_path
+from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to, resource_path, check_process_exists
 
 pyautogui.FAILSAFE = False
 
@@ -355,7 +355,10 @@ if __name__ == "__main__":
     10. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
 
     """)
-    subprocess.run(['start', 'steam://rungameid/686810'], shell=True)
+    if not check_process_exists("leigod.exe"):
+        subprocess.Popen(r"D:\Program Files (x86)\LeiGod_Acc\leigod.exe")
+    if not check_process_exists("HLL-Win64-Shipping.exe"):
+        subprocess.run(['start', 'steam://rungameid/686810'], shell=True)
     main_app = AutoArtyApp()
     magnifier_app = MagnifierApp()
     tk.mainloop()
