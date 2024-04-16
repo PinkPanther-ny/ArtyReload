@@ -93,6 +93,7 @@ class MagnifierApp(tk.Toplevel):
 
         self.canvas_mag = MagnifierCanvas(parent=self, width=230 * 2, height=230, mag_ratio=2)
         self.canvas_mag.pack()
+        self.canvas_mag.hide()
         self.after(100, self.make_click_through)
         keyboard.add_hotkey('CTRL+V', lambda: self.canvas_mag.switch_visibility())
 

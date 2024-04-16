@@ -5,7 +5,6 @@ import subprocess
 import threading
 import time
 import tkinter as tk
-from string import Template
 from threading import Thread, Lock
 
 import keyboard
@@ -195,11 +194,6 @@ class AutoArtyApp(tk.Tk):
         self.confirm_button = tk.Button(self.canvas1, text="Confirm", command=self.confirm)
         self.confirm_button.place(x=250, y=40, width=50, height=50)
 
-        self.text_template = Template("""
-        Levitation: $levitation       ==>> Target : $target_levitation
-        Direction : $direction ($direction2) ==>> Target : $target_direction ($target_direction2) 
-        """)
-
         self.value3 = tk.StringVar()
         self.label3 = tk.Label(self.canvas1, textvariable=self.value3, justify='left')
         self.label3.place(x=10, y=100)
@@ -212,7 +206,18 @@ class AutoArtyApp(tk.Tk):
         self.canvas2.create_line(0, sight_radius, sight_radius * 2, sight_radius, fill='red', dash=(3, 5))
         self.canvas2.create_line(sight_radius, 0, sight_radius, sight_radius * 2, fill='red', dash=(3, 5))
 
+        # Add arty levitation
+        self.canvas3 = tk.Canvas(self, bg='#000000', width=200, height=105, highlightthickness=0)
+        self.value4 = tk.StringVar()
+        self.label4 = tk.Label(self.canvas3, textvariable=self.value4, justify='left')
+        self.label4.place(x=10, y=10)
+        self.history_levi = []
+
         self.is_visible = False
+        self.is_visible_levi = True
+        self.show_levi()
+        self.hide()
+
         self.add_hotkeys()
 
     def toggle_build_assist(self):
@@ -229,8 +234,13 @@ class AutoArtyApp(tk.Tk):
     def calculate_levitation_from_keyboard(self):
         distance = sum(self.number_buffer[idx] * 10 ** (3 - idx) for idx in range(4))
         levitation = round(-0.237 * distance + 1001.7)
-        print(f"Distance {distance} - Levitation {levitation}")
+        levi_str = f"Distance {str(distance):>6} - Levitation {str(levitation):>6}"
+        self.history_levi.append(levi_str)
+        if len(self.history_levi) > 5:
+            self.history_levi.pop(0)
+        print(levi_str)
         speak(f"Levitation {levitation}")
+        self.value4.set('\n'.join(self.history_levi))
 
     def switch_visibility(self):
         if self.is_visible:
@@ -243,8 +253,22 @@ class AutoArtyApp(tk.Tk):
         self.is_visible = False
 
     def show(self):
-        self.canvas1.place(relx=1720 / 1920, rely=190 / 1080, anchor='center')
+        self.canvas1.place(x=self.winfo_screenwidth() - 10, y=10, anchor='ne')
         self.is_visible = True
+
+    def switch_visibility_levi(self):
+        if self.is_visible_levi:
+            self.hide_levi()
+        else:
+            self.show_levi()
+
+    def hide_levi(self):
+        self.canvas3.place_forget()
+        self.is_visible_levi = False
+
+    def show_levi(self):
+        self.canvas3.place(x=10, y=10, anchor='nw')
+        self.is_visible_levi = True
 
     def run(self):
         self.mainloop()
@@ -274,6 +298,7 @@ class AutoArtyApp(tk.Tk):
         keyboard.add_hotkey('CTRL+X', self.update_target)
         keyboard.add_hotkey('CTRL+SPACE', self.confirm)
         keyboard.add_hotkey('CAPSLOCK', self.calculate_levitation_from_keyboard)
+        keyboard.add_hotkey('SHIFT+CAPSLOCK', self.switch_visibility_levi)
         keyboard.add_hotkey('GRAVE+ESC', self.redeploy)
         keyboard.add_hotkey('CTRL+Q', self.force_quit)
         keyboard.add_hotkey('CTRL+SHIFT+DELETE', self.force_quit_all)
