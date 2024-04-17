@@ -15,10 +15,13 @@ from audio import speak, init_audio, terminate_audio
 from build_assist import BuildAssist
 from log_template import get_aim_string, get_target_string
 from magnifier import MagnifierApp
+from map_data import map_data
 from ocr import get_arty_mil, get_arty_angle
 from util import do_task_for_time, switch_to_second, hold_key, switch_focus_to, resource_path, check_process_exists
 
 pyautogui.FAILSAFE = False
+
+MAP_SOUTH_EAST = (520, 971)
 
 
 def is_integer(p):
@@ -178,7 +181,7 @@ class AutoArtyApp(tk.Tk):
         self.integer_validation = self.register(is_integer)
         self.label1 = tk.Label(self.canvas1, text="Current levitation:")
         self.label1.place(x=10, y=40)
-        self.value1 = tk.StringVar()
+        self.value1 = tk.StringVar(value='0')
         self.entry1 = tk.Entry(self.canvas1, textvariable=self.value1,
                                validate='key', validatecommand=(self.integer_validation, '%P'))
         self.entry1.place(x=120, y=40)
@@ -186,7 +189,7 @@ class AutoArtyApp(tk.Tk):
 
         self.label2 = tk.Label(self.canvas1, text="Current direction:")
         self.label2.place(x=10, y=70)
-        self.value2 = tk.StringVar()
+        self.value2 = tk.StringVar(value='0')
         self.entry2 = tk.Entry(self.canvas1, textvariable=self.value2,
                                validate='key', validatecommand=(self.integer_validation, '%P'))
         self.entry2.place(x=120, y=70)
@@ -206,6 +209,8 @@ class AutoArtyApp(tk.Tk):
         self.canvas2.create_line(0, sight_radius, sight_radius * 2, sight_radius, fill='red', dash=(3, 5))
         self.canvas2.create_line(sight_radius, 0, sight_radius, sight_radius * 2, fill='red', dash=(3, 5))
 
+        self.canvas_arty_location = tk.Canvas(self, bg='#000000', highlightthickness=0)
+        self.canvas_arty_location.create_oval(0, 0, 22, 22, outline="#f11", fill="#1f1", width=2)
         # Add arty levitation
         self.canvas3 = tk.Canvas(self, bg='#000000', width=200, height=105, highlightthickness=0)
         self.value4 = tk.StringVar()
@@ -213,12 +218,82 @@ class AutoArtyApp(tk.Tk):
         self.label4.place(x=10, y=10)
         self.history_levi = []
 
+        # Add arty location setter
+        self.canvas4 = tk.Canvas(self, width=200, height=140, highlightthickness=1)
+        self.label5 = tk.Label(self.canvas4, text="Select Map & Arty", justify='left')
+        self.label5.place(x=10, y=10)
+        # Add the dropdown for selecting the map
+        self.map_var = tk.StringVar()
+        sorted_map_names = sorted(map_data["mapData"][i]["name"] for i in range(len(map_data["mapData"])))
+        self.map_dropdown = tk.OptionMenu(self.canvas4, self.map_var, *sorted_map_names)
+        self.map_dropdown.place(x=10, y=30, width=180)
+
+        # Dropdown for selecting the artillery based on the selected map
+        self.arty_var = tk.StringVar()
+        self.arty_dropdown = tk.OptionMenu(self.canvas4, self.arty_var, '')
+        self.arty_dropdown.place(x=10, y=70, width=180)
+        self.arty_dropdown.configure(state="disabled")  # Initially disabled
+
+        self.map_var.trace('w', self.update_arty_options)
+        self.arty_var.trace('w', self.update_confirm_status)
+
+        self.confirm_button = tk.Button(self.canvas4, text="Confirm", command=self.confirm_selection, state="disabled")
+        self.confirm_button.place(x=11, y=110, width=178, height=30)
+        self.canvas4.place(relx=.5, rely=.1, anchor='center')
+
+        # Window visibility control
         self.is_visible = False
         self.is_visible_levi = True
+        self.is_visible_arti_select = True
         self.show_levi()
         self.hide()
 
         self.add_hotkeys()
+
+    # Update artillery options when a map is selected
+    def update_arty_options(self, *args):
+        selected_map = self.map_var.get()
+        self.arty_dropdown.configure(state="disabled")  # Disable when map changes
+        self.arty_var.set('')
+        for map_item in map_data["mapData"]:
+            if map_item["name"] == selected_map:
+                artillery_names = [arty['name'] for arty in map_item['artillery']]
+                self.arty_dropdown['menu'].delete(0, 'end')
+                for arty in artillery_names:
+                    self.arty_dropdown['menu'].add_command(label=arty, command=tk._setit(self.arty_var, arty))
+                if artillery_names:
+                    self.arty_dropdown.configure(state="normal")
+                break
+
+        self.confirm_button.configure(state="disabled")  # Keep confirm disabled until artillery is selected
+
+    # Enable confirm button only if both map and artillery are selected
+    def update_confirm_status(self, *args):
+        if self.map_var.get() and self.arty_var.get():
+            self.confirm_button.configure(state="normal")
+        else:
+            self.confirm_button.configure(state="disabled")
+
+    # Confirm button to print selected map, artillery, and vector2
+    def confirm_selection(self):
+        selected_map = self.map_var.get()
+        selected_arty = self.arty_var.get()
+        for map_item in map_data["mapData"]:
+            if map_item["name"] == selected_map:
+                for arty in map_item["artillery"]:
+                    if arty["name"] == selected_arty:
+                        print(f"Selected Map: {selected_map}, "
+                              f"Selected Artillery: {selected_arty}, "
+                              f"Vector2: {arty['vector2']}")
+                        scaled = [0.88 * x for x in arty['vector2']]
+                        self.arty = Arty((MAP_SOUTH_EAST[0] + scaled[0], MAP_SOUTH_EAST[1] - scaled[1]))
+                        self.canvas_arty_location.place(x=self.arty.location[0], y=self.arty.location[1],
+                                                        width=48, height=48, anchor='center')
+
+                        switch_focus_to("Hell Let Loose  ")
+                        self.after(2500, self.hide_arti)
+
+                        break
 
     def toggle_build_assist(self):
         if self.tickbox_var.get():
@@ -270,6 +345,24 @@ class AutoArtyApp(tk.Tk):
         self.canvas3.place(x=10, y=10, anchor='nw')
         self.is_visible_levi = True
 
+    def switch_visibility_arti(self):
+        if self.is_visible_arti_select:
+            self.hide_arti()
+        else:
+            self.show_arti()
+
+    def hide_arti(self):
+        self.canvas4.place_forget()
+        self.canvas_arty_location.place_forget()
+        self.is_visible_arti_select = False
+
+    def show_arti(self):
+        self.canvas4.place(relx=.5, rely=.1, anchor='center')
+        if self.arty is not None:
+            self.canvas_arty_location.place(x=self.arty.location[0], y=self.arty.location[1],
+                                            width=48, height=48, anchor='center')
+        self.is_visible_arti_select = True
+
     def run(self):
         self.mainloop()
 
@@ -296,6 +389,7 @@ class AutoArtyApp(tk.Tk):
         keyboard.add_hotkey('CTRL+C', self.switch_visibility)
         keyboard.add_hotkey('CTRL+SHIFT+X', self.update_arty)
         keyboard.add_hotkey('CTRL+X', self.update_target)
+        keyboard.add_hotkey('SHIFT+X', self.switch_visibility_arti)
         keyboard.add_hotkey('CTRL+SPACE', self.confirm)
         keyboard.add_hotkey('CAPSLOCK', self.calculate_levitation_from_keyboard)
         keyboard.add_hotkey('SHIFT+CAPSLOCK', self.switch_visibility_levi)
@@ -365,23 +459,25 @@ if __name__ == "__main__":
 
     3. Press 'CTRL+SHIFT+X' to set the artillery position based on the cursor's current location.
 
-    4. Press 'CTRL+SPACE' to confirm the OCR results and start aiming.
+    4. Press 'SHIFT+X' to toggle the visibility of the Map & Artillery select window.
 
-    5. Press 'CAPSLOCK' after entering a four-digit number to calculate and announce the levitation for the artillery.
+    5. Press 'CTRL+SPACE' to confirm the OCR results and start aiming.
 
-    6. Press 'SHIFT+CAPSLOCK' to toggle the visibility of the artillery levitation window.
+    6. Press 'CAPSLOCK' after entering a four-digit number to calculate and announce the levitation for the artillery.
 
-    7. Press 'CTRL+Q' to force quit the application.
+    7. Press 'SHIFT+CAPSLOCK' to toggle the visibility of the artillery levitation window.
 
-    8. Press 'DELETE' to cancel any ongoing shooting action.
+    8. Press 'CTRL+Q' to force quit the application.
 
-    9. Press 'SHIFT+<number>' to initiate the reloading and shooting action <number> times.
+    9. Press 'DELETE' to cancel any ongoing shooting action.
 
-    10. Press 'GRAVE+ESC' to perform a redeploy action in the game.
+    10. Press 'SHIFT+<number>' to initiate the reloading and shooting action <number> times.
 
-    11. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
+    11. Press 'GRAVE+ESC' to perform a redeploy action in the game.
 
-    12. Build Assist: 'Right click' / Press 'C' to start auto-build; 'Middle click' / Press 'V' to interrupt
+    12. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
+
+    13. Build Assist: 'Right click' / Press 'C' to start auto-build; 'Middle click' / Press 'V' to interrupt
 
     """)
     if not check_process_exists("leigod.exe"):
