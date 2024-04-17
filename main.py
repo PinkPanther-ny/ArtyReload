@@ -361,7 +361,7 @@ if __name__ == "__main__":
     Instruction:
     1. Press 'CTRL+V' to toggle the visibility of the application window.
 
-    2. Press 'CTRL+X' to set the target position based on the cursor's current location.
+    2. Press 'CTRL+X' to set the target position based on the cursor's current location, press 'CTRL+SPACE' to confirm.
 
     3. Press 'CTRL+SHIFT+X' to set the artillery position based on the cursor's current location.
 
@@ -369,15 +369,19 @@ if __name__ == "__main__":
 
     5. Press 'CAPSLOCK' after entering a four-digit number to calculate and announce the levitation for the artillery.
 
-    6. Press 'CTRL+Q' to force quit the application.
+    6. Press 'SHIFT+CAPSLOCK' to toggle the visibility of the artillery levitation window.
 
-    7. Press 'DELETE' to cancel any ongoing shooting action.
+    7. Press 'CTRL+Q' to force quit the application.
 
-    8. Press 'SHIFT+<number>' to initiate the reloading and shooting action <number> times.
+    8. Press 'DELETE' to cancel any ongoing shooting action.
 
-    9. Press 'GRAVE+ESC' to perform a redeploy action in the game.
+    9. Press 'SHIFT+<number>' to initiate the reloading and shooting action <number> times.
 
-    10. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
+    10. Press 'GRAVE+ESC' to perform a redeploy action in the game.
+
+    11. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
+
+    12. Build Assist: 'Right click' / Press 'C' to start auto-build; 'Middle click' / Press 'V' to interrupt
 
     """)
     if not check_process_exists("leigod.exe"):
