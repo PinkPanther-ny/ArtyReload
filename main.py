@@ -239,13 +239,11 @@ class AutoArtyApp(tk.Tk):
 
         self.confirm_button = tk.Button(self.canvas4, text="Confirm", command=self.confirm_selection, state="disabled")
         self.confirm_button.place(x=11, y=110, width=178, height=30)
-        self.canvas4.place(relx=.5, rely=.1, anchor='center')
 
         # Window visibility control
         self.is_visible = False
-        self.is_visible_levi = True
-        self.is_visible_arti_select = True
-        self.show_levi()
+        self.is_visible_levi = False
+        self.is_visible_arti_select = False
         self.hide()
 
         self.add_hotkeys()

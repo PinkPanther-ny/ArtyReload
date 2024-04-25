@@ -9,7 +9,7 @@ def resize_by_ratio(im, r):
 
 # @manual_check_decorator
 def get_arty_angle():
-    im = resize_by_ratio(ImageGrab.grab(bbox=(950, 1030, 970, 1045)), 5)
+    im = resize_by_ratio(ImageGrab.grab(bbox=(951, 1033, 969, 1045)), 5)
     result = pytesseract.image_to_string(im,
                                          config='--psm 6 --oem 1 -c tessedit_char_whitelist=0123456789')
 
