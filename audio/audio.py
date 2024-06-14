@@ -1,5 +1,4 @@
 import multiprocessing
-
 import pyttsx3
 
 _queue: multiprocessing.Queue
@@ -7,8 +6,9 @@ _process: multiprocessing.Process
 
 
 class Audio:
-    def __init__(self, text):
+    def __init__(self, text, rate=200):
         engine = pyttsx3.init()
+        engine.setProperty('rate', rate)
         engine.say(text)
         engine.runAndWait()
         del self
@@ -20,13 +20,13 @@ def api_process(queue: multiprocessing.Queue):
         if message == "STOP":
             break
         text = message['text']
-        # print(f"API called with text: {text}")
-        Audio(text)
+        rate = message.get('rate', 200)
+        Audio(text, rate)
 
 
-def speak(text):
+def speak(text, rate=200):
     global _queue  # Make sure to reference the global queue
-    message = {'text': text}
+    message = {'text': text, 'rate': rate}
     _queue.put(message)
 
 
