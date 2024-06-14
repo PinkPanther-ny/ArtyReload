@@ -72,12 +72,10 @@ def do_task_for_time(task, duration, fps=100):
 @contextmanager
 def switch_to_second():
     try:
-        hold_key('F2', 1.4)
-        time.sleep(0.1)
+        hold_key('F2', 1.4 + 0.1)
         yield  # This is where foo() will be executed.
     finally:
-        hold_key('F1', 1.4)
-        time.sleep(0.1)
+        hold_key('F1', 1.4 + 0.1)
 
 
 # Function to set focus to another window (e.g., a game)

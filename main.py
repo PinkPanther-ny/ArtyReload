@@ -44,12 +44,14 @@ class ShootingController:
             if self.interrupt:
                 break
             print(f"Reloading {ith_shell + 1} out of {n}")
-            speak(f"Reloading {ith_shell + 1} out of {n}")
+            speak(f"{ith_shell + 1} out of {n}", rate=250)
 
             with switch_to_second():
-                do_task_for_time(lambda: pyautogui.press('R'), 1)
-                time.sleep(2.6)
-            do_task_for_time(lambda: pyautogui.click(), 0.4)
+                do_task_for_time(lambda: pyautogui.press('R'), 1 + 2.6, fps=30)
+
+            if self.interrupt:
+                break
+            do_task_for_time(lambda: pyautogui.click(), 0.4, fps=30)
 
             count_shoot += 1
 
@@ -306,13 +308,13 @@ class AutoArtyApp(tk.Tk):
 
     def calculate_levitation_from_keyboard(self):
         distance = sum(self.number_buffer[idx] * 10 ** (3 - idx) for idx in range(4))
-        levitation = round(-0.237 * distance + 1001.7)
+        levitation = int(round(-0.237 * distance + 1001.7))
         levi_str = f"Distance {str(distance):>6} - Levitation {str(levitation):>6}"
         self.history_levi.append(levi_str)
         if len(self.history_levi) > 5:
             self.history_levi.pop(0)
         print(levi_str)
-        speak(f"Levitation {levitation}")
+        speak(f"{' '.join(str(levitation))}", rate=300)
         self.value4.set('\n'.join(self.history_levi))
 
     def switch_visibility(self):
