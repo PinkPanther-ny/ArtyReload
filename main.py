@@ -1,3 +1,4 @@
+import argparse
 import math
 import multiprocessing
 import os
@@ -449,6 +450,10 @@ class AutoArtyApp(tk.Tk):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run the application with optional debug mode.")
+    parser.add_argument('--debug', action='store_true', help="Enable debug mode")
+    args = parser.parse_args()
+
     multiprocessing.freeze_support()
     init_audio()
     print("""
@@ -480,10 +485,12 @@ if __name__ == "__main__":
     13. Build Assist: 'Right click' / Press 'C' to start auto-build; 'Middle click' / Press 'V' to interrupt
 
     """)
-    if not check_process_exists("leigod.exe"):
-        subprocess.Popen(r"D:\Program Files (x86)\LeiGod_Acc\leigod.exe")
-    if not check_process_exists("HLL-Win64-Shipping.exe"):
-        subprocess.run(['start', 'steam://rungameid/686810'], shell=True)
+    if not args.debug:
+        if not check_process_exists("leigod.exe"):
+            subprocess.Popen(r"D:\Program Files (x86)\LeiGod_Acc\leigod.exe")
+        if not check_process_exists("HLL-Win64-Shipping.exe"):
+            subprocess.run(['start', 'steam://rungameid/686810'], shell=True)
+
     main_app = AutoArtyApp()
     magnifier_app = MagnifierApp()
     tk.mainloop()
