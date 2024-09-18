@@ -66,7 +66,7 @@ class BuildAssist:
 if __name__ == "__main__":
     BuildAssist.hook()
     print(
-        "BuildAssist is running. Press CAPSLOCK+R or CAPSLOCK+F to toggle key presses. Press C to hold the mouse "
+        "BuildAssist is running. Press RIGHT SHIFT+R or RIGHT SHIFT+F to toggle key presses. Press C to hold the mouse "
         "button, V to release it.")
     try:
         while True:

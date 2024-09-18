@@ -482,7 +482,7 @@ if __name__ == "__main__":
 
     12. Press 'CTRL+SHIFT+DELETE' to quit both HLL game process and this app.
 
-    13. Build Assist: 'Right click' / Press 'C' to start auto-build; 'Middle click' / Press 'V' to interrupt
+    13. Build Assist: 'Right click' / Press 'C' to start auto-build; 'Middle click' / Press 'V' to interrupt, RIGHT SHIFT+R/F loop clicking
 
     """)
     if not args.debug:
