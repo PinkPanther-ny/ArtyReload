@@ -29,6 +29,54 @@ def is_integer(p):
     return p == "" or p.isdigit()
 
 
+class GarrisonLocker:
+    def __init__(self):
+        self.interrupt = False
+        self.in_progress = False
+        self.start_time = 0
+
+    def reload_and_shoot(self):
+        if self.in_progress:
+            return
+        self.in_progress = True
+        self.interrupt = False
+        self.start_time = time.time()
+
+        count_shoot = 0
+        pyautogui.click() # shoot the first loaded round
+        while not self.interrupt:
+
+            if time.time() - (count_shoot * 10) - self.start_time > 10:
+                
+                print(f"GarrisonLocker Shoot {count_shoot}")
+                speak(f"GarrisonLocker Shoot {count_shoot}", rate=250)
+
+
+                if self.interrupt:
+                    break
+
+                do_task_for_time(lambda: pyautogui.click(), 0.4, fps=30)
+
+                with switch_to_second():
+                    do_task_for_time(lambda: pyautogui.press('R'), 1 + 2.6, fps=30)
+
+                do_task_for_time(lambda: pyautogui.click(), 0.4, fps=30)
+
+                with switch_to_second():
+                    do_task_for_time(lambda: pyautogui.press('R'), 1 + 2.6, fps=30)
+
+                count_shoot += 1
+            time.sleep(0.05)
+        print(f"GarrisonLocker finished")
+        speak(f"GarrisonLocker finished")
+        self.in_progress = False
+
+    def stop_execution(self):
+        self.interrupt = True
+        print(f"GarrisonLocker interrupted")
+        speak(f"GarrisonLocker interrupted")
+
+
 class ShootingController:
     def __init__(self):
         self.interrupt = False
@@ -41,6 +89,7 @@ class ShootingController:
         self.interrupt = False
 
         count_shoot = 0
+        pyautogui.click() # shoot the first loaded round
         for ith_shell in range(n):
             if self.interrupt:
                 break
@@ -157,6 +206,7 @@ class AutoArtyApp(tk.Tk):
         super().__init__()
         self.arty = None
         self.shooting_controller = ShootingController()
+        self.garrision_locker = GarrisonLocker()
         self.number_buffer = [0, 0, 0, 0]
 
         self.wm_attributes("-topmost", True)
@@ -407,6 +457,8 @@ class AutoArtyApp(tk.Tk):
             )
 
         keyboard.add_hotkey('DELETE', self.shooting_controller.stop_execution)
+        keyboard.add_hotkey('-', lambda x=i: threading.Thread(target=self.garrision_locker.reload_and_shoot).start())
+        keyboard.add_hotkey('=', self.garrision_locker.stop_execution)
         keyboard.on_press(self.record_number, suppress=False)
 
     def update_arty(self):
