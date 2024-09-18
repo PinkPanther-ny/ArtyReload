@@ -46,7 +46,7 @@ class GarrisonLocker:
         pyautogui.click() # shoot the first loaded round
         while not self.interrupt:
 
-            if time.time() - (count_shoot * 10) - self.start_time > 10:
+            if time.time() - (count_shoot * 20) - self.start_time > 20:
                 
                 print(f"GarrisonLocker Shoot {count_shoot}")
                 speak(f"GarrisonLocker Shoot {count_shoot}", rate=250)
