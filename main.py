@@ -1,6 +1,8 @@
+import multiprocessing
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
 import argparse
 import math
-import multiprocessing
 import os
 import subprocess
 import threading
@@ -506,7 +508,6 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true', help="Enable debug mode")
     args = parser.parse_args()
 
-    multiprocessing.freeze_support()
     init_audio()
     print("""
     Instruction:
